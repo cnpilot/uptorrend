@@ -19,6 +19,7 @@ Execute-1.3-py2.7,另外个是update-tracker.py
 Command那里输入： sh 你脚本的位置， 我是放到根目录，所以是 sh ~/update.sh
 原理就是每次一添加某种子，会自动扫描tracker_status，如果出现"unregistered torrents"就
 会利用脚本刷新。
+
 ###############
 T总版本：
 
