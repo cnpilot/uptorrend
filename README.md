@@ -19,3 +19,37 @@ Execute-1.3-py2.7,另外个是update-tracker.py
 Command那里输入： sh 你脚本的位置， 我是放到根目录，所以是 sh ~/update.sh
 原理就是每次一添加某种子，会自动扫描tracker_status，如果出现"unregistered torrents"就
 会利用脚本刷新。
+###############
+T总版本：
+
+*****  : 完成配置以后要重启deluge  *****
+
+/usr/lib/python2.7/dist-packages/deluge-1.3.15-py2.7.egg/deluge/ui/console/commands
+
+wget https://github.com/cnpilot/Unregistered-Torrents/raw/master/update-tracker.py
+
+
+nano ~/.config/deluge/auth
+
+wget https://github.com/cnpilot/Unregistered-Torrents/raw/master/update.sh
+
+/root/update.sh
+****
+对于update配置：其中一部分配置示例：
+line=$(/usr/bin/deluge-console "connect 127.0.0.1:58846 localclient 1235d8a26bafa929d93a63b73c8d9a26e64e3e75; info" $1 | grep "Tracker status")
+echo $line >> script.log
+case "$line" in
+*unregistered*|*Sent*|*End*of*file*|*Bad*Gateway*)
+eval /usr/bin/deluge-console "connect 127.0.0.1:58846 localclient 1234d8a26bafa929d93a63b73c8d9a26e64e3e75\; update-tracker '$torrentid'";;
+
+########################
+
+###################################
+SeedHost 版本：
+wget seedhost.eu/dl/delugetracker.sh && chmod 750 delugetracker.sh
+
+使用方法：Now go to your deluge settings and enable the execute plugin. Go to the execute plugin configuration and click Add (+). In the Event choose Torrent Added and in Command you need to add an absolute path to the delugetracker.sh file, for example /home10/myuser/delugetracker.sh
+
+Now you need to restart your deluge. After a restart please check if the execute plugin is enabled because sometimes it is not enabled after a restart. Just enable it then and it should work now.
+
+启用后 重启deluge
