@@ -4,9 +4,9 @@ import requests
 import subprocess
 
 # 服务器地址、用户名和密码
-BASE_URL = "http://195.154.168.25:8080"
-USERNAME = "boxbox"
-PASSWORD = "ww78010053"
+BASE_URL = "http://*********:8080"
+USERNAME = "***"
+PASSWORD = "******"
 
 def get_torrent_info_by_hash(sid, info_hash):
     url = f"{BASE_URL}/api/v2/torrents/info"
