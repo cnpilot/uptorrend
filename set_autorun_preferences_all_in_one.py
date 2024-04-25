@@ -142,6 +142,17 @@ def main():
                         subprocess.run(rclone_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
                     except subprocess.CalledProcessError as e:
                         print(f"rclone 命令执行失败: {e}")
+
+                    # 清理空文件夹
+                    cleanup_command = ["find", "/home/boxbox/Emby", "-type", "d", "-empty", "-exec", "rmdir", "{}", "+"]
+                    cleanup_log_command = " ".join(cleanup_command)
+                    print(f"执行清理空文件夹命令：{cleanup_log_command}")
+                    with open('/home/boxbox/qbittorrent_script.log', 'a') as log_file:
+                        log_file.write(f"执行清理空文件夹命令：{cleanup_log_command}\n")
+                    try:
+                        subprocess.run(cleanup_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+                    except subprocess.CalledProcessError as e:
+                        print(f"清理空文件夹命令执行失败: {e}")
             else:
                 print("未获取到种子信息或者保存路径")
         else:
