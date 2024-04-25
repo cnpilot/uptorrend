@@ -147,3 +147,34 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+'''
+导入模块：
+sys：提供了对 Python 解释器的访问。
+os：提供了与操作系统交互的功能。
+requests：用于发送 HTTP 请求。
+subprocess：用于在 Python 脚本中调用外部命令。
+shutil：用于高级文件操作，例如复制、删除等。
+
+全局变量：
+BASE_URL：存储服务器地址。
+USERNAME 和 PASSWORD：存储登录所需的用户名和密码。
+
+函数 get_torrent_info_by_hash(sid, info_hash)：
+通过给定的 sid 和 info_hash 获取种子信息。
+使用 HTTP GET 请求发送给定的 info_hash 到服务器，并解析服务器的响应来获取种子信息。
+
+函数 process_bdmv_folders(save_path)：
+递归地处理包含 BDMV 文件夹的目录。
+遍历指定的保存路径，如果发现目录名为 "BDMV"，则执行以下操作：
+获取相关路径和文件名。
+使用 genisoimage 命令创建 ISO 文件，并在创建成功后删除原始目录。
+
+函数 main()：
+从命令行获取种子信息的 info_hash 参数。
+尝试登录到 qBittorrent，获取 sid。
+获取种子信息，如果成功则记录种子信息到日志文件中。
+根据种子信息中的保存路径，执行不同的操作：
+如果存在 BDMV 文件夹，则调用 process_bdmv_folders() 处理。
+如果不存在 BDMV 文件夹，则执行一系列命令来处理非 BDMV 文件夹的情况，包括执行 Python 脚本、执行 rclone 命令等，并在 rclone 命令执行完毕后清理空文件夹。
+'''
