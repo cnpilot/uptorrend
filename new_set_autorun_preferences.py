@@ -5,8 +5,8 @@ import subprocess
 import shutil
 
 # 服务器地址、用户名和密码
-BASE_URL = "http://62.210.204.150:8080"
-USERNAME = "boxbox"
+BASE_URL = "http://*********:8080"
+USERNAME = "***"
 PASSWORD = "******"
 
 def get_torrent_info_by_hash(sid, info_hash):
