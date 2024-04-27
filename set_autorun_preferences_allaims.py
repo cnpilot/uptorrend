@@ -5,7 +5,7 @@ import subprocess
 import shutil
 
 # 服务器地址、用户名和密码
-BASE_URL = "http://*********:8080"
+BASE_URL = "******:8080"
 USERNAME = "***"
 PASSWORD = "******"
 
@@ -56,8 +56,76 @@ def process_bdmv_folders(save_path):
                     with open("/home/boxbox/ttlog", "a") as log_file:
                         log_file.write(f"生成 {mv_name}.iso 文件失败: {e}\n")
 
+def has_bdmv_folder(save_path):
+    """
+    检查 save_path 及其子文件夹是否含有 BDMV 文件夹
+    """
+    for root, dirs, files in os.walk(save_path):
+        if "BDMV" in dirs:
+            return True
+    return False
+
+def process_non_bdmv_folders(save_path, name, tags):
+    """
+    处理非 BDMV 文件夹的逻辑
+    """
+    print("未找到 BDMV 文件夹，执行非原盘操作")
+    command = [
+        "python3",
+        "/home/boxbox/torcp/tp.py",
+        os.path.join(save_path, name),  # 使用 save_path 和 name 结合
+        "-d",
+        f"/home/boxbox/Emby/{name}/",
+        "-s"
+    ]
+    if tags:
+        command.extend(["--imdbid", tags])
+    command.extend([
+        "--tmdb-api-key",
+        "1f749b3a822f0982bf853b1c5c145824",
+        "--origin-name",
+        "--emby-bracket"
+    ])
+    log_command = " ".join(command)
+    print(f"执行命令: {log_command}")
+    with open('/home/boxbox/qbittorrent_script.log', 'a') as log_file:
+        log_file.write(f"执行命令: {log_command}\n")
+    try:
+        with open("/home/boxbox/tp_log.log", "a") as log_file:
+            subprocess.run(command, stdout=log_file, stderr=subprocess.STDOUT, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"命令执行失败: {e}")
+
+    # 构建并执行 rclone 命令
+    rclone_command = [
+        "rclone",
+        "move",
+        f"/home/boxbox/Emby/{name}/",
+        "/home/boxbox/MyEmby/",
+        "-v",
+        "--stats",
+        "2000s",
+        "--transfers",
+        "3",
+        "--drive-chunk-size",
+        "32M",
+        "--log-file=/home/boxbox/ttclone.log",
+        "--delete-empty-src-dirs"
+    ]
+    log_rclone_command = " ".join(rclone_command)
+    print(f"执行 rclone 命令：{log_rclone_command}")
+    with open('/home/boxbox/qbittorrent_script.log', 'a') as log_file:
+        log_file.write(f"执行 rclone 命令：{log_rclone_command}\n")
+    try:
+        subprocess.run(rclone_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+        # 清理空文件夹
+        cleanup_command = ["find", "/home/boxbox/Emby", "-type", "d", "-empty", "-exec", "rmdir", "{}", "+"]
+        subprocess.run(cleanup_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"rclone 命令执行失败: {e}")
+
 def main():
-    # 从命令行获取 info hash 参数
+    # 从命令行获取种子信息的 info_hash 参数
     if len(sys.argv) < 2:
         print("未提供 info hash 参数")
         sys.exit(1)
@@ -79,65 +147,13 @@ def main():
                 with open('/home/boxbox/qbittorrent_script.log', 'a') as log_file:
                     log_file.write(f"种子信息: name={name}, content_path={content_path}, tags={tags}, save_path={save_path}\n")
 
-                # 处理 BDMV 文件夹
-                process_bdmv_folders(save_path)
-                
-                # 处理非 BDMV 文件夹的情况
-                if not os.path.exists(os.path.join(save_path, "BDMV")):
-                    print("未找到 BDMV 文件夹，执行非原盘操作")
-                    command = [
-                        "python3",
-                        "/home/boxbox/torcp/tp.py",
-                        os.path.join(save_path, name),  # 使用 save_path 和 name 结合
-                        "-d",
-                        f"/home/boxbox/Emby/{name}/",
-                        "-s"
-                    ]
-                    if tags:
-                        command.extend(["--imdbid", tags])
-                    command.extend([
-                        "--tmdb-api-key",
-                        "1f749b3a822f0982bf853b1c5c145824",
-                        "--origin-name",
-                        "--emby-bracket"
-                    ])
-                    log_command = " ".join(command)
-                    print(f"执行命令: {log_command}")
-                    with open('/home/boxbox/qbittorrent_script.log', 'a') as log_file:
-                        log_file.write(f"执行命令: {log_command}\n")
-                    try:
-                        with open("/home/boxbox/tp_log.log", "a") as log_file:
-                            subprocess.run(command, stdout=log_file, stderr=subprocess.STDOUT, check=True)
-                    except subprocess.CalledProcessError as e:
-                        print(f"命令执行失败: {e}")
-
-                    # 构建并执行 rclone 命令
-                    rclone_command = [
-                        "rclone",
-                        "move",
-                        f"/home/boxbox/Emby/{name}/",
-                        "/home/boxbox/MyEmby/",
-                        "-v",
-                        "--stats",
-                        "2000s",
-                        "--transfers",
-                        "3",
-                        "--drive-chunk-size",
-                        "32M",
-                        "--log-file=/home/boxbox/ttclone.log",
-                        "--delete-empty-src-dirs"
-                    ]
-                    log_rclone_command = " ".join(rclone_command)
-                    print(f"执行 rclone 命令：{log_rclone_command}")
-                    with open('/home/boxbox/qbittorrent_script.log', 'a') as log_file:
-                        log_file.write(f"执行 rclone 命令：{log_rclone_command}\n")
-                    try:
-                        subprocess.run(rclone_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-                        # 清理空文件夹
-                        cleanup_command = ["find", "/home/boxbox/Emby", "-type", "d", "-empty", "-exec", "rmdir", "{}", "+"]
-                        subprocess.run(cleanup_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-                    except subprocess.CalledProcessError as e:
-                        print(f"rclone 命令执行失败: {e}")
+                # 检查是否存在 BDMV 文件夹
+                if has_bdmv_folder(save_path):
+                    print("发现 BDMV 文件夹，执行 BDMV 文件夹处理逻辑")
+                    process_bdmv_folders(save_path)
+                else:
+                    # 执行处理非 BDMV 文件夹的逻辑
+                    process_non_bdmv_folders(save_path, name, tags)
             else:
                 print("未获取到种子信息或者保存路径")
         else:
@@ -147,34 +163,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-'''
-导入模块：
-sys：提供了对 Python 解释器的访问。
-os：提供了与操作系统交互的功能。
-requests：用于发送 HTTP 请求。
-subprocess：用于在 Python 脚本中调用外部命令。
-shutil：用于高级文件操作，例如复制、删除等。
-
-全局变量：
-BASE_URL：存储服务器地址。
-USERNAME 和 PASSWORD：存储登录所需的用户名和密码。
-
-函数 get_torrent_info_by_hash(sid, info_hash)：
-通过给定的 sid 和 info_hash 获取种子信息。
-使用 HTTP GET 请求发送给定的 info_hash 到服务器，并解析服务器的响应来获取种子信息。
-
-函数 process_bdmv_folders(save_path)：
-递归地处理包含 BDMV 文件夹的目录。
-遍历指定的保存路径，如果发现目录名为 "BDMV"，则执行以下操作：
-获取相关路径和文件名。
-使用 genisoimage 命令创建 ISO 文件，并在创建成功后删除原始目录。
-
-函数 main()：
-从命令行获取种子信息的 info_hash 参数。
-尝试登录到 qBittorrent，获取 sid。
-获取种子信息，如果成功则记录种子信息到日志文件中。
-根据种子信息中的保存路径，执行不同的操作：
-如果存在 BDMV 文件夹，则调用 process_bdmv_folders() 处理。
-如果不存在 BDMV 文件夹，则执行一系列命令来处理非 BDMV 文件夹的情况，包括执行 Python 脚本、执行 rclone 命令等，并在 rclone 命令执行完毕后清理空文件夹。
-'''
